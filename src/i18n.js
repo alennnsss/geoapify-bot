@@ -14,6 +14,9 @@ const messages = {
       label: "Разделы",
       bot: "Открыть бота",
       lang: "Сменить язык",
+      theme: "Сменить тему",
+      light: "Светлая тема",
+      dark: "Тёмная тема",
     },
     hero: {
       title1: "Лиды без сайта за минуту",
@@ -36,6 +39,25 @@ const messages = {
       title: "Как это выглядит",
       hint: "Нажимайте на кнопки — они работают так же, как в боте.",
       statusBtn: "Изменить статус компании {n}",
+      checked: "Проверено: {n}",
+      noSite: "Без сайта: {n}",
+      socialOnly: "Только соцсети: {n}",
+      page: "Страница {page}/{pages} · найдено {n}",
+      landline: "(городской, только звонок)",
+      checkSite: "🌐 проверить сайт",
+      prev: "◀ Назад",
+      next: "Вперёд ▶",
+      statusToast: "Статус: {s}",
+      unmarked: "Отметка снята",
+      status: { contacted: "написал", replied: "ответил", client: "клиент", rejected: "отказ" },
+      leads: {
+        l1: { name: "Кафе «Ромашка»", address: "ул. Абая, 10" },
+        l2: { name: "Кофейня «Утро»", address: "пр. Достык, 25" },
+        l3: { name: "Пекарня «Колосок»", address: "ул. Сатпаева, 5" },
+        l4: { name: "Барбершоп «Борода»", address: "ул. Жандосова, 40" },
+        l5: { name: "Цветы «Ландыш»", address: "ул. Толе би, 77" },
+        l6: { name: "Автомойка «Блеск»", address: "пр. Райымбека, 120" },
+      },
     },
     how: {
       title: "Как это работает",
@@ -113,6 +135,9 @@ const messages = {
       label: "Sections",
       bot: "Open the bot",
       lang: "Switch language",
+      theme: "Switch theme",
+      light: "Light theme",
+      dark: "Dark theme",
     },
     hero: {
       title1: "Leads without a website in a minute",
@@ -135,6 +160,25 @@ const messages = {
       title: "What it looks like",
       hint: "Tap the buttons — they work just like in the bot (which replies in Russian).",
       statusBtn: "Change the status of business {n}",
+      checked: "Checked: {n}",
+      noSite: "No website: {n}",
+      socialOnly: "Social media only: {n}",
+      page: "Page {page}/{pages} · found {n}",
+      landline: "(landline, calls only)",
+      checkSite: "🌐 check website",
+      prev: "◀ Back",
+      next: "Next ▶",
+      statusToast: "Status: {s}",
+      unmarked: "Mark removed",
+      status: { contacted: "contacted", replied: "replied", client: "client", rejected: "declined" },
+      leads: {
+        l1: { name: "Daisy Café", address: "10 Abay St" },
+        l2: { name: "Morning Coffee", address: "25 Dostyk Ave" },
+        l3: { name: "Wheat Bakery", address: "5 Satpayev St" },
+        l4: { name: "Beard Barbershop", address: "40 Zhandosov St" },
+        l5: { name: "Lily Flowers", address: "77 Tole Bi St" },
+        l6: { name: "Shine Car Wash", address: "120 Raiymbek Ave" },
+      },
     },
     how: {
       title: "How it works",
@@ -199,6 +243,127 @@ const messages = {
       data: "Data: Geoapify / OpenStreetMap",
     },
   },
+  zh: {
+    meta: {
+      title: "Siteless — 没有网站的潜在客户",
+    },
+    nav: {
+      how: "工作原理",
+      commands: "命令",
+      faq: "常见问题",
+      about: "关于我们",
+      access: "获取权限",
+      label: "页面导航",
+      bot: "打开机器人",
+      lang: "切换语言",
+      theme: "切换主题",
+      light: "浅色主题",
+      dark: "深色主题",
+    },
+    hero: {
+      title1: "一分钟找到没有网站的客户",
+      text: "查找有电话但没有网站的商家。为网页工作室和自由职业者准备好的客户名单，附带 WhatsApp 链接、状态管理和 CSV 导出。",
+      open: "打开 {bot}",
+      title2: "网页工作室的迷你 CRM",
+      text2: "状态、备注和 CSV 导出——所有客户工作都在一个 Telegram 聊天中完成。",
+      access: "获取权限",
+    },
+    features: {
+      title: "功能",
+      all: "全部命令",
+      try: "试一试",
+      nosite: { title: "没有网站", tag: "搜索", text: "只显示有电话且没有真正网站的商家" },
+      mobile: { title: "手机号", tag: "筛选", text: "筛选哈萨克斯坦和俄罗斯的手机号——直接发 WhatsApp" },
+      crm: { title: "迷你 CRM", tag: "销售漏斗", text: "“已联系 → 已回复 → 客户”状态以及每个商家的备注" },
+      csv: { title: "CSV", tag: "导出", text: "一条命令把找到的客户导出到 Excel" },
+    },
+    demo: {
+      title: "效果演示",
+      hint: "点击按钮试试——效果和机器人里一样（机器人用俄语回复）。",
+      statusBtn: "更改商家 {n} 的状态",
+      checked: "已检查：{n}",
+      noSite: "没有网站：{n}",
+      socialOnly: "只有社交媒体：{n}",
+      page: "第 {page}/{pages} 页 · 共找到 {n} 个",
+      landline: "（座机，只能打电话）",
+      checkSite: "🌐 查找网站",
+      prev: "◀ 上一页",
+      next: "下一页 ▶",
+      statusToast: "状态：{s}",
+      unmarked: "已取消标记",
+      status: { contacted: "已联系", replied: "已回复", client: "客户", rejected: "已拒绝" },
+      leads: {
+        l1: { name: "雏菊咖啡馆", address: "阿拜街 10 号" },
+        l2: { name: "晨光咖啡", address: "多斯特克大道 25 号" },
+        l3: { name: "麦穗面包房", address: "萨特帕耶夫街 5 号" },
+        l4: { name: "胡子理发店", address: "然多索夫街 40 号" },
+        l5: { name: "铃兰花店", address: "托列比街 77 号" },
+        l6: { name: "闪亮洗车", address: "雷伊姆别克大道 120 号" },
+      },
+    },
+    how: {
+      title: "工作原理",
+      search: { title: "搜索", text: "向机器人发送类别和城市，例如 “кафе Алматы”。" },
+      filter: { title: "筛选", text: "机器人会去掉有网站或没有电话的商家，手机号排在前面。" },
+      write: { title: "跟进", text: "用模板在 WhatsApp 上联系，并标记状态：已联系、已回复、客户或拒绝。" },
+      stats: { places: "每次搜索的商家数", limit: "每天搜索次数", statuses: "迷你 CRM 中的状态" },
+    },
+    commands: {
+      title: "机器人命令",
+      count: "{n} 条命令",
+      search: "按类别和城市搜索",
+      business: "主要商业类别",
+      pipeline: "跟进中的商家和销售漏斗",
+      note: "给商家添加备注",
+      mobile: "只显示手机号",
+      social: "显示只有社交媒体的商家",
+      template: "WhatsApp 消息模板",
+      export: "导出为 CSV",
+      stats: "统计和设置",
+    },
+    access: {
+      text: "机器人不对外开放。请提交申请，然后打开 {bot} 并点击 Start——申请通过后机器人会给你发消息。",
+      or: "或者发邮件给我",
+      mail: "发送邮件",
+      copy: "复制邮箱",
+      copied: "已复制",
+      openBot: "在 Telegram 中打开机器人",
+      subject: "申请使用 Siteless 机器人",
+      body: "你好！我想申请使用 Siteless 机器人。\n\n我的 Telegram：\n城市 / 行业：",
+    },
+    form: {
+      title: "权限申请",
+      telegram: "你的 Telegram",
+      telegramHint: "用户名不含空格，至少 5 个字符",
+      niche: "城市和行业（可选）",
+      nichePlaceholder: "阿拉木图，为咖啡馆做网站",
+      submit: "提交申请",
+      sending: "正在发送…",
+      sent: "申请已提交！现在打开 {bot} 并点击 Start。",
+      error: "申请发送失败。请改为发邮件给我，我会同样尽快回复。",
+    },
+    faq: {
+      title: "常见问题",
+      source: { q: "商家数据从哪里来？", a: "来自 Geoapify 和 OpenStreetMap。机器人只保留有电话且没有自己网站的商家。并非所有地点都填写了联系方式，所以地图上的部分商家不会出现在结果中。" },
+      cities: { q: "可以搜索哪些城市？", a: "任何城市都可以。机器人对哈萨克斯坦最熟悉：阿拉木图、阿斯塔纳、奇姆肯特等。" },
+      limit: { q: "可以搜索多少次？", a: "每天最多 10 次。一次搜索是一个城市中的一个类别，最多 1500 个商家。" },
+      privacy: { q: "谁能看到我的状态和备注？", a: "只有你自己。每个用户的搜索记录、状态和备注都是独立的。" },
+      access: { q: "审核需要多久？", a: "申请由人工审核，通常在一天之内。权限开通后机器人会主动给你发消息。" },
+    },
+    about: {
+      title: "关于我们",
+      text: "我叫 Sain Alen。我开发了 Siteless——一个帮你找到没有网站的客户的 Telegram 机器人。",
+      github: "我的 GitHub",
+      photo: "Sain Alen 小时候的照片",
+    },
+    footer: {
+      tagline: "我们寻找没有网站的商家，帮你找到客户。",
+      bot: "机器人",
+      project: "项目",
+      contact: "联系",
+      data: "数据来源：Geoapify / OpenStreetMap",
+    },
+  },
 };
 
 function savedLocale() {
@@ -208,8 +373,18 @@ function savedLocale() {
   } catch {
     // localStorage недоступен
   }
-  return navigator.language?.startsWith("ru") ? "ru" : "en";
+  const lang = navigator.language ?? "";
+  if (lang.startsWith("ru")) return "ru";
+  if (lang.startsWith("zh")) return "zh";
+  return "en";
 }
+
+// Языки в выпадающем списке шапки.
+export const LOCALES = [
+  { code: "ru", label: "Русский", short: "RU" },
+  { code: "en", label: "English", short: "EN" },
+  { code: "zh", label: "中文", short: "中文" },
+];
 
 export const i18n = createI18n({
   legacy: false,
@@ -219,7 +394,7 @@ export const i18n = createI18n({
 });
 
 function applyLocale(locale) {
-  document.documentElement.lang = locale;
+  document.documentElement.lang = locale === "zh" ? "zh-CN" : locale;
   document.title = messages[locale].meta.title;
 }
 

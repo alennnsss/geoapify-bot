@@ -47,6 +47,12 @@ defineProps({ name: String, size: { type: Number, default: 22 } });
       <rect x="3" y="4" width="18" height="16" rx="2" />
       <path d="M9 4v16M15 4v16M5.5 8h1.5M11 8h2M11 11.5h2M17 8h1.5M17 11.5h1.5M17 15h1.5" />
     </template>
+    <template v-else-if="name === 'sun'">
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4" />
+    </template>
+    <path v-else-if="name === 'moon'" d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11Z" />
+    <path v-else-if="name === 'chevron'" d="m6 9 6 6 6-6" />
     <template v-else-if="name === 'csv'">
       <path d="M14 2.5H7a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7.5Z" />
       <path d="M14 2.5v5h5M8.5 13h7M8.5 17h7M12 11v8" />

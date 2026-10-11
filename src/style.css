@@ -15,27 +15,42 @@
   --danger: #e5484d;
   --chat-bg: #e8eef6;
   --chat-in: #ffffff;
+  --promo: var(--secondary);
+  --promo-2: var(--primary);
+  --promo-ring: rgba(255, 255, 255, 0.18);
+  --promo-ring-2: rgba(255, 255, 255, 0.1);
+  --bubble: #ffffff;
+  --bubble-text: #1a202c;
+  --bubble-muted: #596780;
+  --bubble-out: #1a202c;
   --radius: 10px;
   color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0e1116;
-    --surface: #171b22;
-    --field: #0e1116;
-    --text: #f4f7fb;
-    --text-2: #aeb8c5;
-    --muted: #8292ab;
-    --border: rgba(195, 212, 233, 0.1);
-    --border-strong: rgba(195, 212, 233, 0.22);
-    --tint: rgba(84, 166, 255, 0.12);
-    --success: #5fd08a;
-    --danger: #ff8a8a;
-    --chat-bg: #0e1621;
-    --chat-in: #182533;
-    color-scheme: dark;
-  }
+:root[data-theme="dark"] {
+  --bg: #0e1116;
+  --surface: #171b22;
+  --field: #0e1116;
+  --text: #f4f7fb;
+  --text-2: #aeb8c5;
+  --muted: #8292ab;
+  --border: rgba(195, 212, 233, 0.1);
+  --border-strong: rgba(195, 212, 233, 0.22);
+  --tint: rgba(84, 166, 255, 0.12);
+  --success: #5fd08a;
+  --danger: #ff8a8a;
+  --chat-bg: #0e1621;
+  --chat-in: #182533;
+  /* Промо-блоки приглушены: ярко-голубой на тёмном фоне режет глаза. */
+  --promo: #132a52;
+  --promo-2: #1a2766;
+  --promo-ring: rgba(255, 255, 255, 0.06);
+  --promo-ring-2: rgba(255, 255, 255, 0.035);
+  --bubble: #182533;
+  --bubble-text: #f4f7fb;
+  --bubble-muted: #aeb8c5;
+  --bubble-out: #3563e9;
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -63,6 +78,8 @@ h1, h2, h3, p { margin: 0; }
 .btn:hover { background: var(--primary-hover); }
 .btn.light { background: var(--secondary); }
 .btn.light:hover { background: #3f95f3; }
+:root[data-theme="dark"] .btn.light { background: var(--primary); }
+:root[data-theme="dark"] .btn.light:hover { background: var(--primary-hover); }
 .btn.ghost { background: var(--field); color: var(--text); }
 .btn.ghost:hover { background: var(--border-strong); }
 .btn:focus-visible, .icon-btn:focus-visible, .nav-pill a:focus-visible, summary:focus-visible {
@@ -88,6 +105,27 @@ h1, h2, h3, p { margin: 0; }
 .icon-btn:hover { color: var(--primary); border-color: var(--primary); }
 .icon-btn.router-link-exact-active { color: var(--primary); border-color: var(--primary); }
 .icon-btn.show-sm { display: none; }
+
+/* Выбор языка */
+.lang { position: relative; }
+.icon-btn.lang-btn { display: inline-flex; align-items: center; gap: 6px; width: auto; padding: 0 14px; border-radius: 70px; white-space: nowrap; }
+.lang-btn svg { transition: transform 0.15s; }
+.lang-btn[aria-expanded="true"] svg { transform: rotate(180deg); }
+.lang-menu {
+  position: absolute; right: 0; top: calc(100% + 8px); z-index: 20; min-width: 160px;
+  margin: 0; padding: 6px; list-style: none;
+  background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius);
+  box-shadow: 0 12px 32px rgba(10, 30, 90, 0.16);
+}
+.lang-menu button {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%;
+  padding: 10px 12px; border: 0; border-radius: 6px; background: transparent;
+  font: inherit; font-size: 14px; font-weight: 500; color: var(--text); cursor: pointer; text-align: left;
+}
+.lang-menu button:hover, .lang-menu button:focus-visible { background: var(--field); outline: none; }
+.lang-menu button[aria-checked="true"] { color: var(--primary); font-weight: 700; }
+.menu-enter-active, .menu-leave-active { transition: opacity 0.12s, transform 0.12s; }
+.menu-enter-from, .menu-leave-to { opacity: 0; transform: translateY(-4px); }
 .nav-pill a.router-link-exact-active:not([href*="#"]) { background: var(--tint); color: var(--primary); }
 
 /* Промо-карточки */
@@ -95,23 +133,23 @@ h1, h2, h3, p { margin: 0; }
 .promo {
   position: relative; overflow: hidden; min-height: 360px; padding: 24px;
   border-radius: var(--radius); color: #fff;
-  background-color: var(--secondary);
+  background-color: var(--promo);
   background-image:
-    radial-gradient(circle at 85% 120%, rgba(255, 255, 255, 0.18) 0 140px, transparent 141px),
-    radial-gradient(circle at 85% 120%, rgba(255, 255, 255, 0.1) 0 220px, transparent 221px);
+    radial-gradient(circle at 85% 120%, var(--promo-ring) 0 140px, transparent 141px),
+    radial-gradient(circle at 85% 120%, var(--promo-ring-2) 0 220px, transparent 221px);
 }
-.promo.dark { background-color: var(--primary); }
+.promo.dark { background-color: var(--promo-2); }
 .promo-text { position: relative; z-index: 1; max-width: 320px; }
 .promo h1, .promo h2 { font-size: 32px; font-weight: 600; line-height: 1.5; letter-spacing: -0.03em; }
 .promo p { margin-top: 16px; font-size: 16px; font-weight: 500; line-height: 1.6; opacity: 0.95; }
 .promo .btn { margin-top: 20px; }
 .promo-visual { position: absolute; right: 24px; bottom: 24px; }
-.mini-chat { display: flex; flex-direction: column; gap: 8px; width: 230px; font-size: 12px; line-height: 1.45; color: #1a202c; }
-.mini-chat .b { padding: 8px 12px; border-radius: 12px; background: #fff; box-shadow: 0 6px 20px rgba(26, 32, 44, 0.12); }
-.mini-chat .b.out { align-self: flex-end; background: #1a202c; color: #fff; border-bottom-right-radius: 4px; }
+.mini-chat { display: flex; flex-direction: column; gap: 8px; width: 230px; font-size: 12px; line-height: 1.45; color: var(--bubble-text); }
+.mini-chat .b { padding: 8px 12px; border-radius: 12px; background: var(--bubble); box-shadow: 0 6px 20px rgba(26, 32, 44, 0.12); }
+.mini-chat .b.out { align-self: flex-end; background: var(--bubble-out); color: #fff; border-bottom-right-radius: 4px; }
 .mini-chat .b.in { border-bottom-left-radius: 4px; }
 .mini-chat .b strong { display: block; }
-.mini-chat .b span { color: #596780; }
+.mini-chat .b span { color: var(--bubble-muted); }
 .bot-art { width: 190px; height: 190px; border-radius: 44px; box-shadow: 0 24px 50px rgba(10, 30, 90, 0.35); transform: rotate(-8deg); }
 
 /* Панель заявки */
@@ -278,6 +316,8 @@ h1, h2, h3, p { margin: 0; }
   .logo { font-size: 24px; }
   .header-actions { gap: 8px; }
   .icon-btn { width: 40px; height: 40px; }
+  .icon-btn.lang-btn { padding: 0 10px; }
+  .lang-btn svg { display: none; }
   .promo-grid, .split, .about { grid-template-columns: 1fr; gap: 24px; }
   .promo h1, .promo h2 { font-size: 26px; }
   .mini-chat { width: 100%; max-width: 280px; }

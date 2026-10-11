@@ -3,14 +3,14 @@
 ## О проекте
 Siteless (пакет `siteless-bot`, раньше `2gis-bot`) — Telegram-бот для поиска компаний без сайта (лидов) с телефоном. Бот закрытый: владелец (`OWNER_ID`) и пользователи, чью заявку он одобрил (таблица `access`).
 Источник данных: Geoapify (Places и Geocoding API), а не 2GIS.
-Стек: Node.js (ESM, `"type": "module"`), grammY, PostgreSQL (`pg`), dotenv. Фронтенд: Vue 3 + Vite + vue-router + vue-i18n (RU/EN), `@vercel/analytics`.
+Стек: Node.js (ESM, `"type": "module"`), grammY, PostgreSQL (`pg`), dotenv. Фронтенд: Vue 3 + Vite + vue-router + vue-i18n (RU/EN/ZH), `@vercel/analytics`.
 Хостинг: бот — Railway (`railway.json`), сайт — Vercel (`vercel.json`, функция `api/request-access.js`).
 
 ## Структура
 - `bot.js` — все команды бота, поиск, пагинация, callback-кнопки, CSV-экспорт
 - `db.js` — пул PostgreSQL, `initDb()` (создаёт таблицы), все SQL-функции
 - `schema.sql` — схема БД (справочно; реальная схема создаётся в `db.js` → `initDb`)
-- `index.html`, `src/` — фронтенд (Vue + Vite). Тексты сайта — только в `src/i18n.js`, на двух языках.
+- `index.html`, `src/` — фронтенд (Vue + Vite). Тексты сайта — только в `src/i18n.js`, на трёх языках (ru, en, zh) с одинаковым набором ключей. Тема (светлая/тёмная) — `src/theme.js` и `data-theme` на `<html>`.
 - `api/request-access.js` — Vercel-функция: заявка с сайта уходит владельцу в Telegram
 - `public/` — статика
 - `assets/` — иконка бота (`bot-icon.svg` — исходник, `bot-icon.png` — 512×512 для @BotFather)
