@@ -9,6 +9,7 @@ import {
   saveSearchWithLeads,
   setLeadStatus,
   setLeadNote,
+  setLeadDescription,
   getContactedIds,
   getStatusCounts,
   getPipeline,
@@ -34,6 +35,11 @@ const DEFAULT_CITY = process.env.DEFAULT_CITY || "Алматы";
 const PAGE_SIZE = 5;
 // Лимит поисков в сутки для одобренных пользователей (на владельца не действует).
 const DAILY_SEARCH_LIMIT = Number(process.env.DAILY_SEARCH_LIMIT) || 10;
+// Ollama дописывает описание компании до 20–50 слов. Без OLLAMA_URL
+// остаётся короткое описание из данных Geoapify.
+const OLLAMA_URL = process.env.OLLAMA_URL?.replace(/\/+$/, "");
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "qwen2.5:3b";
+const OLLAMA_API_KEY = process.env.OLLAMA_API_KEY;
 
 // Статусы компании в CRM. Кнопка с номером переключает их по кругу.
 const STATUSES = {
@@ -216,6 +222,430 @@ async function getJson(url) {
   }
 
   return data;
+}
+
+// Названия категорий Geoapify. Берётся самая точная из известных.
+const CATEGORY_LABELS = {
+  catering: "заведение общепита",
+  "catering.restaurant": "ресторан",
+  "catering.cafe": "кафе",
+  "catering.cafe.coffee_shop": "кофейня",
+  "catering.cafe.coffee": "кофейня",
+  "catering.cafe.dessert": "кафе-кондитерская",
+  "catering.cafe.ice_cream": "кафе-мороженое",
+  "catering.cafe.bubble_tea": "кафе с бабл-ти",
+  "catering.fast_food": "фастфуд",
+  "catering.bar": "бар",
+  "catering.pub": "паб",
+  "catering.biergarten": "пивной сад",
+  "catering.food_court": "фуд-корт",
+  "catering.taproom": "пивной бар",
+  "service.beauty": "салон красоты",
+  "service.beauty.hairdresser": "парикмахерская",
+  // Сюда Geoapify относит любой OSM shop=beauty, а не только спа.
+  "service.beauty.spa": "салон красоты",
+  "service.beauty.massage": "массажный салон",
+  "service.vehicle": "автосервис",
+  "service.vehicle.repair": "автосервис",
+  "service.vehicle.repair.car": "ремонт автомобилей",
+  "service.vehicle.repair.tyre": "шиномонтаж",
+  "service.vehicle.car_wash": "автомойка",
+  "service.vehicle.fuel": "АЗС",
+  "service.vehicle.parts": "автозапчасти",
+  "service.dry_cleaning": "химчистка",
+  "service.cleaning.laundry": "прачечная",
+  "service.tailor": "ателье",
+  "service.funeral_directors": "ритуальные услуги",
+  "service.financial": "финансовые услуги",
+  "service.travel_agency": "турагентство",
+  "service.estate_agent": "агентство недвижимости",
+  "service.post": "почтовые услуги",
+  "commercial": "магазин",
+  "commercial.supermarket": "супермаркет",
+  "commercial.marketplace": "рынок",
+  "commercial.shopping_mall": "торговый центр",
+  "commercial.convenience": "продуктовый магазин",
+  "commercial.food_and_drink": "магазин продуктов",
+  "commercial.food_and_drink.bakery": "пекарня",
+  "commercial.food_and_drink.butcher": "мясной магазин",
+  "commercial.food_and_drink.confectionery": "кондитерская",
+  "commercial.food_and_drink.drinks": "магазин напитков",
+  "commercial.food_and_drink.fruit_and_vegetable": "овощи и фрукты",
+  "commercial.clothing": "магазин одежды",
+  "commercial.clothing.shoes": "обувной магазин",
+  "commercial.clothing.children": "детская одежда",
+  "commercial.health_and_beauty": "магазин косметики",
+  "commercial.health_and_beauty.cosmetics": "магазин косметики",
+  "commercial.health_and_beauty.optician": "оптика",
+  "commercial.florist": "цветочный магазин",
+  "commercial.furniture_and_interior": "мебель и интерьер",
+  "commercial.elektronics": "магазин электроники",
+  "commercial.elektronics.mobile_phone": "салон мобильной связи",
+  "commercial.elektronics.computer": "компьютерный магазин",
+  "commercial.building_materials": "стройматериалы",
+  "commercial.building_materials.paint": "лакокрасочные материалы",
+  "commercial.building_materials.doors": "двери",
+  "commercial.building_materials.windows": "окна",
+  "commercial.houseware_and_hardware": "хозтовары",
+  "commercial.houseware_and_hardware.hardware": "хозтовары и инструменты",
+  "commercial.jewelry": "ювелирный магазин",
+  "commercial.gift_and_souvenir": "подарки и сувениры",
+  "commercial.toy_and_game": "магазин игрушек",
+  "commercial.books": "книжный магазин",
+  "commercial.stationery": "канцтовары",
+  "commercial.pet": "зоомагазин",
+  "commercial.sports": "спорттовары",
+  "commercial.vehicle": "автосалон",
+  "commercial.second_hand": "секонд-хенд",
+  "commercial.chemist": "бытовая химия",
+  office: "офис",
+  "office.company": "офис компании",
+  "office.lawyer": "юридические услуги",
+  "office.accountant": "бухгалтерские услуги",
+  "office.it": "IT-компания",
+  "office.estate_agent": "агентство недвижимости",
+  "office.insurance": "страховая компания",
+  "office.travel_agent": "турагентство",
+  "office.advertising_agency": "рекламное агентство",
+  "office.educational_institution": "учебный центр",
+  education: "образование",
+  "education.school": "школа",
+  "education.driving_school": "автошкола",
+  "education.language_school": "языковая школа",
+  "education.music_school": "музыкальная школа",
+  "education.college": "колледж",
+  "education.university": "университет",
+  childcare: "детский центр",
+  "childcare.kindergarten": "детский сад",
+  healthcare: "медицина",
+  "healthcare.pharmacy": "аптека",
+  "healthcare.clinic_or_praxis": "клиника",
+  "healthcare.clinic_or_praxis.dentist": "стоматология",
+  "healthcare.dentist": "стоматология",
+  "healthcare.hospital": "больница",
+  accommodation: "размещение",
+  "accommodation.hotel": "гостиница",
+  "accommodation.hostel": "хостел",
+  "accommodation.guest_house": "гостевой дом",
+  "accommodation.apartment": "апартаменты",
+  "accommodation.motel": "мотель",
+  sport: "спорт",
+  "sport.fitness": "фитнес-клуб",
+  "sport.fitness.fitness_centre": "фитнес-центр",
+  "sport.swimming_pool": "бассейн",
+  "sport.sports_centre": "спортивный центр",
+  entertainment: "развлечения",
+  "entertainment.cinema": "кинотеатр",
+  "entertainment.bowling_alley": "боулинг",
+  "entertainment.escape_game": "квест-комната",
+  "entertainment.amusement_arcade": "игровые автоматы",
+  "entertainment.activity_park": "парк развлечений",
+  pet: "товары и услуги для животных",
+  "pet.veterinary": "ветклиника",
+  "pet.service": "груминг и уход за животными",
+  rental: "прокат",
+  "rental.car": "прокат автомобилей",
+  production: "производство",
+  tourism: "туризм",
+  leisure: "отдых",
+};
+
+// Кухни и типичные значения OSM-тегов.
+const TAG_LABELS = {
+  pizza: "пицца",
+  sushi: "суши",
+  burger: "бургеры",
+  coffee_shop: "кофе",
+  kebab: "кебаб",
+  shawarma: "шаурма",
+  doner: "донер",
+  chicken: "курица",
+  regional: "местная кухня",
+  kazakh: "казахская",
+  uzbek: "узбекская",
+  russian: "русская",
+  georgian: "грузинская",
+  italian: "итальянская",
+  japanese: "японская",
+  chinese: "китайская",
+  korean: "корейская",
+  turkish: "турецкая",
+  asian: "азиатская",
+  european: "европейская",
+  american: "американская",
+  uyghur: "уйгурская",
+  caucasian: "кавказская",
+  oriental: "восточная",
+  steak_house: "стейки",
+  barbecue: "барбекю",
+  grill: "гриль",
+  seafood: "морепродукты",
+  noodle: "лапша",
+  ramen: "рамен",
+  bakery: "выпечка",
+  cake: "торты",
+  dessert: "десерты",
+  ice_cream: "мороженое",
+  donut: "пончики",
+  pancake: "блины",
+  breakfast: "завтраки",
+  sandwich: "сэндвичи",
+  hot_dog: "хот-доги",
+  tea: "чай",
+  vegetarian: "вегетарианская",
+  vegan: "веганская",
+  massage: "массаж",
+  cosmetics: "косметология",
+  cosmetic_studio: "косметология",
+  aesthetic: "эстетическая косметология",
+  eyelash: "ресницы",
+  eyebrow: "брови",
+  nails: "маникюр",
+  manicure: "маникюр",
+  pedicure: "педикюр",
+  hair: "стрижки и окрашивание",
+  hairdresser: "стрижки",
+  hair_removal: "эпиляция",
+  waxing: "восковая эпиляция",
+  makeup: "макияж",
+  tanning: "загар",
+  tattoo: "тату",
+  barber: "барбершоп",
+  car_repair: "ремонт авто",
+  tyres: "шины",
+  car_wash: "мойка",
+  car_parts: "автозапчасти",
+  oil_change: "замена масла",
+  bodywork: "кузовной ремонт",
+  dentist: "стоматология",
+  orthodontics: "ортодонтия",
+  dermatology: "дерматология",
+  gynaecology: "гинекология",
+  paediatrics: "педиатрия",
+  fitness: "фитнес",
+  yoga: "йога",
+  boxing: "бокс",
+  martial_arts: "единоборства",
+  swimming: "плавание",
+  dance: "танцы",
+  tailor: "пошив одежды",
+  shoemaker: "ремонт обуви",
+  jeweller: "ювелирные изделия",
+  photographer: "фотография",
+  printer: "печать",
+  key_cutter: "изготовление ключей",
+  electronics_repair: "ремонт техники",
+  mobile_phone: "телефоны",
+  bakery: "выпечка",
+  confectionery: "кондитерские изделия",
+  florist: "цветы",
+  clothes: "одежда",
+  shoes: "обувь",
+};
+
+function humanTag(value) {
+  return String(value)
+    .split(";")
+    .map((x) => x.trim())
+    .filter(Boolean)
+    .map((x) => TAG_LABELS[x] ?? x.replaceAll("_", " "))
+    .join(", ");
+}
+
+function trimWords(text, max) {
+  const value = String(text).replace(/\s+/g, " ").trim();
+  if (value.length <= max) {
+    return value;
+  }
+  return `${value.slice(0, max).replace(/\s+\S*$/, "")}…`;
+}
+
+// Короткое описание специализации из данных Geoapify/OSM.
+// Ничего не придумывает: только то, что есть в карточке места.
+function describePlace(properties) {
+  const raw = properties.datasource?.raw ?? {};
+  const categories = properties.categories ?? [];
+
+  const known = categories
+    .filter((category) => CATEGORY_LABELS[category])
+    .sort((a, b) => b.split(".").length - a.split(".").length);
+
+  const parts = [];
+
+  // Самая точная категория и, если отличается, более общая.
+  const labels = [...new Set(known.map((c) => CATEGORY_LABELS[c]))];
+  if (labels.length) {
+    const main = labels[0];
+    parts.push(main[0].toUpperCase() + main.slice(1));
+  }
+
+  const cuisine = properties.catering?.cuisine ?? raw.cuisine;
+  if (cuisine) {
+    parts.push(`кухня: ${humanTag(cuisine)}`);
+  }
+
+  // Уточнения из OSM: что продают, ремесло, медицинская специализация.
+  const details = [
+    raw.shop && raw.shop !== "yes" ? raw.shop : null,
+    raw.craft,
+    raw["healthcare:speciality"],
+    raw.sport,
+    raw.beauty,
+    raw.service,
+    raw.trade,
+  ].filter(Boolean);
+
+  // Берём только переведённые значения и не повторяем основной тип.
+  const mainLabel = (labels[0] ?? "").toLowerCase();
+  const profile = [
+    ...new Set(
+      details
+        .join(";")
+        .split(";")
+        .map((x) => TAG_LABELS[x.trim()])
+        .filter((x) => x && !mainLabel.includes(x))
+    ),
+  ];
+
+  if (profile.length) {
+    parts.push(`профиль: ${profile.join(", ")}`);
+  }
+
+  const text = raw["description:ru"] ?? raw.description;
+  if (text) {
+    parts.push(trimWords(text, 200));
+  }
+
+  const extras = [];
+  const facilities = properties.facilities ?? {};
+  if (facilities.delivery || raw.delivery === "yes") extras.push("доставка");
+  if (facilities.takeaway || raw.takeaway === "yes") extras.push("навынос");
+  if (facilities.outdoor_seating || raw.outdoor_seating === "yes") {
+    extras.push("летняя веранда");
+  }
+  if (extras.length) {
+    parts.push(extras.join(", "));
+  }
+
+  const hours = properties.opening_hours ?? raw.opening_hours;
+  if (hours) {
+    parts.push(
+      hours === "24/7" ? "работает круглосуточно" : `часы: ${hours}`
+    );
+  }
+
+  // После «…» точку не ставим.
+  return (
+    parts.reduce(
+      (text, part) =>
+        text ? `${text}${text.endsWith("…") ? " " : ". "}${part}` : part,
+      ""
+    ) || null
+  );
+}
+
+function wordCount(text) {
+  return String(text ?? "").split(/\s+/).filter(Boolean).length;
+}
+
+// Ollama дописывает описание до 20–50 слов. Возвращает null при ошибке.
+async function expandDescription(lead, city) {
+  const prompt =
+    `Компания «${lead.name}», ${city}${
+      lead.address ? `, адрес: ${lead.address}` : ""
+    }.\n` +
+    `Данные из карты: ${lead.description || "нет"}.\n\n` +
+    "Напиши 20–50 слов по-русски: чем, скорее всего, занимается компания " +
+    "и в чём её специализация. Опирайся на название и данные из карты. " +
+    "Не выдумывай цены, годы, награды и отзывы. " +
+    "Ответь одним абзацем без кавычек, списков и вступлений.";
+
+  try {
+    const response = await fetch(`${OLLAMA_URL}/api/chat`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(OLLAMA_API_KEY
+          ? { Authorization: `Bearer ${OLLAMA_API_KEY}` }
+          : {}),
+      },
+      body: JSON.stringify({
+        model: OLLAMA_MODEL,
+        stream: false,
+        messages: [{ role: "user", content: prompt }],
+        options: { temperature: 0.3, num_predict: 200 },
+      }),
+      signal: AbortSignal.timeout(90_000),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Ollama вернул код ${response.status}`);
+    }
+
+    const data = await response.json();
+    const text = String(data.message?.content ?? "")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    const words = text.split(" ");
+    // Модель иногда пишет длиннее — обрезаем до 50 слов.
+    const result =
+      words.length > 50
+        ? `${words.slice(0, 50).join(" ").replace(/[,;:]$/, "")}…`
+        : text;
+
+    return wordCount(result) >= 10 ? result : null;
+  } catch (error) {
+    console.warn(`Ollama: ${error.message}`);
+    return null;
+  }
+}
+
+// id компаний, для которых Ollama уже запускали в этом процессе,
+// чтобы при ошибке не дёргать её на каждом перелистывании.
+const describing = new Set();
+
+// Дописывает описания для открытой страницы в фоне и перерисовывает её.
+async function describePage(api, chatId, session) {
+  if (!OLLAMA_URL) {
+    return;
+  }
+
+  const page = session.page;
+  const start = page * PAGE_SIZE;
+  const pending = session.leads
+    .slice(start, start + PAGE_SIZE)
+    .filter(
+      (lead) =>
+        wordCount(lead.description) < 20 && !describing.has(lead.id)
+    );
+
+  if (pending.length === 0) {
+    return;
+  }
+
+  pending.forEach((lead) => describing.add(lead.id));
+
+  let changed = false;
+
+  // По одной: локальная Ollama всё равно обрабатывает запросы очередью.
+  for (const lead of pending) {
+    const text = await expandDescription(lead, session.city);
+    if (text) {
+      lead.description = text;
+      changed = true;
+      await setLeadDescription(lead.id, text);
+    }
+  }
+
+  // Перерисовываем, только если пользователь не ушёл на другую страницу.
+  if (
+    changed &&
+    sessions.get(chatId) === session &&
+    session.page === page
+  ) {
+    await redrawPage(api, chatId, session);
+  }
 }
 
 async function fetchPlaces(category, placeId, total) {
@@ -492,6 +922,7 @@ async function search(chatId, category, city) {
       mobile,
       site,
       kind,
+      description: describePlace(properties),
       done: false,
     };
 
@@ -572,6 +1003,10 @@ function leadText(
       lead.status ? `${STATUSES[lead.status].icon} ` : ""
     }${esc(lead.name)}</b>`,
   ];
+
+  if (lead.description) {
+    lines.push(`<i>${esc(lead.description)}</i>`);
+  }
 
   if (lead.address) {
     lines.push(esc(lead.address));
@@ -772,23 +1207,26 @@ async function showPage(
     // Запоминаем сообщение, чтобы /clear мог его перерисовать.
     session.messageId =
       message.message_id;
+  } else {
+    session.messageId =
+      ctx.callbackQuery?.message
+        ?.message_id ??
+      session.messageId;
 
-    return;
+    try {
+      await ctx.editMessageText(
+        text,
+        options
+      );
+    } catch (error) {
+      ignoreNotModified(error);
+    }
   }
 
-  session.messageId =
-    ctx.callbackQuery?.message
-      ?.message_id ??
-    session.messageId;
-
-  try {
-    await ctx.editMessageText(
-      text,
-      options
-    );
-  } catch (error) {
-    ignoreNotModified(error);
-  }
+  // Описания от Ollama дописываются в фоне, страница не ждёт.
+  describePage(ctx.api, ctx.chat.id, session).catch((error) =>
+    console.warn("Не удалось дописать описания:", error.message)
+  );
 }
 
 
@@ -1627,6 +2065,7 @@ bot.command(
     const rows = [
       [
         "Название",
+        "Описание",
         "Адрес",
         "Телефон",
         "Тип",
@@ -1640,6 +2079,7 @@ bot.command(
     for (const lead of session.leads) {
       rows.push([
         lead.name,
+        lead.description ?? "",
         lead.address,
         lead.phone ?? "",
         lead.kind === "noSite"

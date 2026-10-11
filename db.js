@@ -76,6 +76,9 @@ export async function initDb() {
         CHECK (status IN ('contacted', 'replied', 'client', 'rejected'));
     ALTER TABLE contacted ADD COLUMN IF NOT EXISTS note TEXT;
 
+    -- Описание специализации компании (из Geoapify, дописывается Ollama).
+    ALTER TABLE leads ADD COLUMN IF NOT EXISTS description TEXT;
+
     -- Заявки на доступ и одобренные пользователи (владелец здесь не хранится).
     CREATE TABLE IF NOT EXISTS access (
       user_id BIGINT PRIMARY KEY,
@@ -152,12 +155,13 @@ export async function saveSearchWithLeads(chatId, city, category, leads) {
 
     await client.query(
       `INSERT INTO leads
-        (source_id, name, address, phone, mobile, site, kind, city, category, updated_at)
+        (source_id, name, address, phone, mobile, site, kind, description,
+         city, category, updated_at)
        SELECT u.source_id, u.name, u.address, u.phone, u.mobile, u.site, u.kind,
-              $8, $9, NOW()
+              u.description, $9, $10, NOW()
        FROM unnest($1::text[], $2::text[], $3::text[], $4::text[],
-                   $5::boolean[], $6::text[], $7::text[])
-         AS u(source_id, name, address, phone, mobile, site, kind)
+                   $5::boolean[], $6::text[], $7::text[], $8::text[])
+         AS u(source_id, name, address, phone, mobile, site, kind, description)
        ON CONFLICT (source_id) DO UPDATE SET
          name = EXCLUDED.name,
          address = EXCLUDED.address,
@@ -165,6 +169,13 @@ export async function saveSearchWithLeads(chatId, city, category, leads) {
          mobile = EXCLUDED.mobile,
          site = EXCLUDED.site,
          kind = EXCLUDED.kind,
+         -- Более длинное описание (уже дописанное Ollama) не затираем.
+         description = CASE
+           WHEN length(COALESCE(leads.description, '')) >
+                length(COALESCE(EXCLUDED.description, ''))
+           THEN leads.description
+           ELSE EXCLUDED.description
+         END,
          updated_at = NOW()`,
       [
         leads.map((l) => l.id),
@@ -174,6 +185,7 @@ export async function saveSearchWithLeads(chatId, city, category, leads) {
         leads.map((l) => l.mobile),
         leads.map((l) => l.site),
         leads.map((l) => l.kind),
+        leads.map((l) => l.description ?? null),
         city,
         category,
       ]
@@ -226,6 +238,13 @@ export async function setLeadNote(chatId, sourceId, note) {
     [chatId, sourceId, note]
   );
   return result.rows[0].status;
+}
+
+export async function setLeadDescription(sourceId, description) {
+  await pool.query(
+    `UPDATE leads SET description = $2 WHERE source_id = $1`,
+    [sourceId, description]
+  );
 }
 
 export async function getContactedIds(chatId) {
@@ -296,6 +315,7 @@ export async function getSearchLeads(searchId, chatId) {
        l.mobile,
        l.site,
        l.kind,
+       l.description,
        c.status,
        c.note,
        (c.source_id IS NOT NULL) AS done

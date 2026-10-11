@@ -20,6 +20,9 @@ CREATE TABLE IF NOT EXISTS leads (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Описание специализации компании (из Geoapify, дописывается Ollama).
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS description TEXT;
+
 CREATE TABLE IF NOT EXISTS searches (
   id BIGSERIAL PRIMARY KEY,
   chat_id BIGINT NOT NULL REFERENCES users(chat_id) ON DELETE CASCADE,
