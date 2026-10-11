@@ -8,10 +8,71 @@ function esc(value) {
     .replaceAll(">", "&gt;");
 }
 
+// Ограничение частоты заявок. Хранится в памяти экземпляра функции:
+// на Vercel экземпляров может быть несколько и они перезапускаются,
+// поэтому это защита от простого спама, а не жёсткий лимит.
+const WINDOW_MS = 10 * 60 * 1000;
+const PER_IP = 3;
+const TOTAL = 30;
+const hits = new Map();
+let recent = [];
+
+function tooMany(ip) {
+  const now = Date.now();
+  recent = recent.filter((time) => now - time < WINDOW_MS);
+  const own = (hits.get(ip) ?? []).filter((time) => now - time < WINDOW_MS);
+
+  if (own.length >= PER_IP || recent.length >= TOTAL) {
+    hits.set(ip, own);
+    return true;
+  }
+
+  own.push(now);
+  recent.push(now);
+  hits.set(ip, own);
+
+  // Чистим старые IP, чтобы Map не росла.
+  if (hits.size > 1000) {
+    for (const [key, times] of hits) {
+      if (!times.some((time) => now - time < WINDOW_MS)) hits.delete(key);
+    }
+  }
+
+  return false;
+}
+
+// Заявки принимаем только со своего сайта.
+function sameOrigin(req) {
+  const origin = req.headers.origin;
+  if (!origin) return false;
+
+  try {
+    const host = new URL(origin).host;
+    const allowed = [req.headers.host];
+    if (process.env.SITE_URL) allowed.push(new URL(process.env.SITE_URL).host);
+    return allowed.includes(host);
+  } catch {
+    return false;
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
     return res.status(405).json({ ok: false });
+  }
+
+  if (!sameOrigin(req)) {
+    return res.status(403).json({ ok: false });
+  }
+
+  const ip =
+    String(req.headers["x-forwarded-for"] ?? "").split(",")[0].trim() ||
+    req.socket?.remoteAddress ||
+    "unknown";
+
+  if (tooMany(ip)) {
+    return res.status(429).json({ ok: false });
   }
 
   const { telegram = "", niche = "", website = "" } = req.body ?? {};

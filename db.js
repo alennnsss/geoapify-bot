@@ -6,13 +6,28 @@ if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL не задан в .env");
 }
 
+// С DATABASE_CA (PEM-сертификат провайдера) сертификат сервера проверяется.
+// Без него в production соединение шифруется, но сертификат не проверяется:
+// так работает Postgres во внутренней сети Railway.
+const DATABASE_CA = process.env.DATABASE_CA?.replaceAll("\\n", "\n");
+
+if (process.env.NODE_ENV === "production" && !DATABASE_CA &&
+    process.env.DATABASE_SSL !== "false") {
+  console.warn(
+    "DATABASE_CA не задан: сертификат БД не проверяется. " +
+      "Для подключения по публичному адресу задайте DATABASE_CA."
+  );
+}
+
 export const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.DATABASE_SSL === "false"
     ? false
-    : process.env.NODE_ENV === "production"
-      ? { rejectUnauthorized: false }
-      : undefined,
+    : DATABASE_CA
+      ? { ca: DATABASE_CA, rejectUnauthorized: true }
+      : process.env.NODE_ENV === "production"
+        ? { rejectUnauthorized: false }
+        : undefined,
   max: 10,
   idleTimeoutMillis: 30_000,
   connectionTimeoutMillis: 10_000,
