@@ -8,8 +8,8 @@ import Icon from "./Icon.vue";
 const { t } = useI18n();
 
 const email = "sainalenkz@gmail.com";
-const bot = "@newitgis_bot";
-const botUrl = "https://t.me/newitgis_bot";
+const bot = "@getsite_bot";
+const botUrl = "https://t.me/getsite_bot";
 const mailto = computed(
   () =>
     `mailto:${email}?subject=` +

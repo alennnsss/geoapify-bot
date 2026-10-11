@@ -22,7 +22,7 @@ function toggleLocale() {
         <RouterLink to="/about">{{ t("nav.about") }}</RouterLink>
       </nav>
       <div class="header-actions">
-        <a class="icon-btn" href="https://t.me/newitgis_bot" target="_blank" rel="noopener" :aria-label="t('nav.bot')" :title="t('nav.bot')">
+        <a class="icon-btn" href="https://t.me/getsite_bot" target="_blank" rel="noopener" :aria-label="t('nav.bot')" :title="t('nav.bot')">
           <Icon name="telegram" />
         </a>
         <RouterLink class="icon-btn show-sm" to="/about" :aria-label="t('nav.about')" :title="t('nav.about')">

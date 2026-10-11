@@ -30,7 +30,7 @@ const year = new Date().getFullYear();
         <div>
           <h3>{{ t("footer.contact") }}</h3>
           <ul>
-            <li><a href="https://t.me/newitgis_bot" target="_blank" rel="noopener">Telegram</a></li>
+            <li><a href="https://t.me/getsite_bot" target="_blank" rel="noopener">Telegram</a></li>
             <li><a href="mailto:sainalenkz@gmail.com">Email</a></li>
           </ul>
         </div>
