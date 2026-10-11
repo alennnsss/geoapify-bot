@@ -2,6 +2,9 @@ import { createI18n } from "vue-i18n";
 
 const messages = {
   ru: {
+    meta: {
+      title: "Siteless — лиды без сайта",
+    },
     nav: {
       how: "Как работает",
       commands: "Команды",
@@ -98,6 +101,9 @@ const messages = {
     },
   },
   en: {
+    meta: {
+      title: "Siteless — leads without a website",
+    },
     nav: {
       how: "How it works",
       commands: "Commands",
