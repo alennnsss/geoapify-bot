@@ -332,8 +332,7 @@ export async function getSearchLeads(searchId, chatId) {
        l.kind,
        l.description,
        c.status,
-       c.note,
-       (c.source_id IS NOT NULL) AS done
+       c.note
      FROM search_results sr
      JOIN searches s ON s.id = sr.search_id
      JOIN leads l ON l.source_id = sr.source_id

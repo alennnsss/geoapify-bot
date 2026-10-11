@@ -2,9 +2,6 @@ import { createI18n } from "vue-i18n";
 
 const messages = {
   ru: {
-    meta: {
-      title: "Siteless — лиды без сайта",
-    },
     nav: {
       how: "Как работает",
       commands: "Команды",
@@ -58,7 +55,6 @@ const messages = {
       stats: "статистика и настройки",
     },
     access: {
-      title: "Получить доступ",
       text: "Бот закрытый. Оставьте заявку, затем откройте {bot} и нажмите Start — после одобрения бот пришлёт сообщение.",
       or: "Или напишите на почту",
       mail: "Написать письмо",
@@ -102,9 +98,6 @@ const messages = {
     },
   },
   en: {
-    meta: {
-      title: "Siteless — leads without a website",
-    },
     nav: {
       how: "How it works",
       commands: "Commands",
@@ -158,7 +151,6 @@ const messages = {
       stats: "stats and settings",
     },
     access: {
-      title: "Get access",
       text: "The bot is private. Leave a request, then open {bot} and tap Start — the bot will message you once you are approved.",
       or: "Or email me",
       mail: "Send an email",

@@ -459,7 +459,6 @@ const TAG_LABELS = {
   key_cutter: "изготовление ключей",
   electronics_repair: "ремонт техники",
   mobile_phone: "телефоны",
-  bakery: "выпечка",
   confectionery: "кондитерские изделия",
   florist: "цветы",
   clothes: "одежда",
@@ -944,7 +943,6 @@ async function search(chatId, category, city) {
       continue;
     }
 
-    // Уже отмеченные «написал» в новых поисках не показываем.
     if (contactedIds.has(sourceId)) {
       hidden++;
       continue;
@@ -963,7 +961,6 @@ async function search(chatId, category, city) {
       site,
       kind,
       description: describePlace(properties),
-      done: false,
     };
 
     leads.push(lead);
@@ -1074,9 +1071,6 @@ function leadText(
 
   const links = [];
 
-  /*
-   * WhatsApp
-   */
   const wa = buildWa(
     lead,
     template
@@ -1166,9 +1160,6 @@ function renderPage(chatId, session) {
       const keyboard =
         new InlineKeyboard();
 
-      /*
-       * Кнопки "написал"
-       */
       slice.forEach(
         (lead, index) => {
           keyboard.text(
@@ -1188,9 +1179,6 @@ function renderPage(chatId, session) {
 
       keyboard.row();
 
-      /*
-       * Навигация по страницам
-       */
       if (session.page > 0) {
         keyboard.text(
           "◀ Назад",
@@ -1292,10 +1280,6 @@ function ignoreNotModified(error) {
 }
 
 
-/*
- * Перерисовать последнее сообщение с результатами
- * (например, после /clear).
- */
 async function redrawPage(
   api,
   chatId,
@@ -1947,9 +1931,6 @@ bot.callbackQuery(
 );
 
 
-/*
- * Кнопка с номером: переключает статус компании по кругу
- */
 bot.callbackQuery(
   /^done:(\d+):(\d+)$/,
   async (ctx) => {
@@ -2006,7 +1987,6 @@ bot.callbackQuery(
     }
 
     lead.status = status;
-    lead.done = Boolean(status);
 
     // Снятие отметки удаляет и заметку.
     if (!status) {
@@ -2077,9 +2057,6 @@ async function currentSession(chatId) {
 }
 
 
-/*
- * Экспорт CSV
- */
 bot.command(
   "export",
   async (ctx) => {
@@ -2177,9 +2154,6 @@ bot.command(
 );
 
 
-/*
- * Заметка к компании из последнего списка
- */
 bot.command("note", async (ctx) => {
   const chatId = ctx.chat.id;
   const match = ctx.match.trim().match(/^(\d+)\s*([\s\S]*)$/);
@@ -2215,7 +2189,6 @@ bot.command("note", async (ctx) => {
 
   lead.status = await setLeadNote(chatId, lead.id, note || null);
   lead.note = note || null;
-  lead.done = true;
 
   await redrawPage(ctx.api, chatId, session);
 
@@ -2225,9 +2198,6 @@ bot.command("note", async (ctx) => {
 });
 
 
-/*
- * Воронка и компании в работе
- */
 bot.command("pipeline", async (ctx) => {
   const counts = await getStatusCounts(ctx.chat.id);
   const rows = await getPipeline(ctx.chat.id);
@@ -2255,9 +2225,6 @@ bot.command("pipeline", async (ctx) => {
 });
 
 
-/*
- * Только мобильные номера
- */
 bot.command(
   "mobile",
   async (ctx) => {
@@ -2283,10 +2250,6 @@ bot.command(
 );
 
 
-/*
- * Показывать компании
- * только с соцсетями
- */
 bot.command(
   "social",
   async (ctx) => {
@@ -2312,9 +2275,6 @@ bot.command(
 );
 
 
-/*
- * Изменение шаблона WhatsApp
- */
 bot.command(
   "template",
   async (ctx) => {
@@ -2353,9 +2313,6 @@ bot.command(
 );
 
 
-/*
- * Статистика
- */
 bot.command(
   "stats",
   async (ctx) => {
@@ -2423,13 +2380,11 @@ bot.command(
     if (session) {
       session.leads.forEach(
         (lead) => {
-          lead.done = false;
           lead.status = null;
           lead.note = null;
         }
       );
 
-      // Убираем ✅ и в уже показанном сообщении.
       await redrawPage(
         ctx.api,
         ctx.chat.id,
@@ -2453,9 +2408,6 @@ bot.catch((error) => {
 });
 
 
-/*
- * Корректное завершение
- */
 async function shutdown(
   signal
 ) {
@@ -2487,15 +2439,9 @@ process.once(
 );
 
 
-/*
- * Запуск базы данных
- */
 await initDb();
 
 
-/*
- * Команды Telegram-бота
- */
 const COMMANDS = [
   { command: "search", description: "Поиск компаний" },
   { command: "business", description: "Основные категории бизнеса" },

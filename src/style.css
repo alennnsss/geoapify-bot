@@ -114,7 +114,7 @@ h1, h2, h3, p { margin: 0; }
 .mini-chat .b span { color: #596780; }
 .bot-art { width: 190px; height: 190px; border-radius: 44px; box-shadow: 0 24px 50px rgba(10, 30, 90, 0.35); transform: rotate(-8deg); }
 
-/* Панель заявки — по мотивам Pick-Up / Drop-Off */
+/* Панель заявки */
 .panel { background: var(--surface); border-radius: var(--radius); padding: 24px 32px; }
 .access-panel { display: grid; grid-template-columns: 1fr auto minmax(260px, 0.6fr); gap: 32px; align-items: start; }
 .access-panel .divider { width: 1px; align-self: stretch; background: var(--border); }
@@ -140,14 +140,14 @@ h1, h2, h3, p { margin: 0; }
 .form-done p { color: var(--success); font-weight: 600; line-height: 1.5; }
 .contact-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
 
-/* Заголовок раздела — как «Popular Cars / View All» */
+/* Заголовок раздела */
 .section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 0 20px; }
 .section-head h2 { font-size: 16px; font-weight: 600; color: var(--muted); }
 .section-head a { font-size: 16px; font-weight: 600; color: var(--primary); }
 .section-head span { font-size: 14px; font-weight: 500; color: var(--muted); }
 .section { display: flex; flex-direction: column; gap: 20px; }
 
-/* Карточки возможностей — как карточки машин */
+/* Карточки возможностей */
 .cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 32px; }
 .card { display: flex; flex-direction: column; background: var(--surface); border-radius: var(--radius); padding: 24px; }
 .card h3 { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
