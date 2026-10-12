@@ -8,8 +8,8 @@ import Icon from "./Icon.vue";
 const { t } = useI18n();
 
 const email = "sainalenkz@gmail.com";
-const bot = "@getsite_bot";
-const botUrl = "https://t.me/getsite_bot";
+const bot = "@newitgis_bot";
+const botUrl = "https://t.me/newitgis_bot";
 const mailto = computed(
   () =>
     `mailto:${email}?subject=` +
@@ -64,7 +64,7 @@ const commands = [
         <div class="promo-text">
           <h1>{{ t("hero.title1") }}</h1>
           <p>{{ t("hero.text") }}</p>
-          <a :href="botUrl" class="btn" target="_blank" rel="noopener">{{ t("hero.open", { bot }) }}</a>
+          <a :href="botUrl" class="btn" target="_blank" rel="noopener">{{ t("hero.open",) }}@getsite_bot</a>
         </div>
         <div class="promo-visual mini-chat" aria-hidden="true">
           <div class="b out">/search кафе Алматы</div>
