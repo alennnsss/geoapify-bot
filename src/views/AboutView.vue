@@ -10,9 +10,6 @@ const linkedin = "https://kz.linkedin.com/in/alen-sain-1917973a2";
 <template>
   <main class="container page">
     <section class="about">
-      <div class="promo dark about-photo">
-        <img src="/sain-alen.jpg" :alt="t('about.photo')" width="720" height="1280" />
-      </div>
       <div class="panel about-info">
         <span class="tag">{{ t("about.title") }}</span>
         <h1>Sain Alen</h1>
