@@ -1,16 +1,12 @@
 import { ref } from "vue";
 
-// Тема сайта. Без сохранённого выбора берётся системная. Атрибут
-// data-theme ставит ещё inline-скрипт в index.html, чтобы не было вспышки.
 const media = window.matchMedia("(prefers-color-scheme: dark)");
 
 function savedTheme() {
   try {
     const saved = localStorage.getItem("theme");
     if (saved === "light" || saved === "dark") return saved;
-  } catch {
-    // localStorage недоступен
-  }
+  } catch {}
   return null;
 }
 
@@ -25,12 +21,9 @@ export function toggleTheme() {
   applyTheme(theme.value);
   try {
     localStorage.setItem("theme", theme.value);
-  } catch {
-    // localStorage недоступен
-  }
+  } catch {}
 }
 
-// Пока пользователь сам не выбрал тему, следуем за системной.
 media.addEventListener("change", (event) => {
   if (savedTheme()) return;
   theme.value = event.matches ? "dark" : "light";

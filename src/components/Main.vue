@@ -25,9 +25,7 @@ async function copyEmail() {
     await navigator.clipboard.writeText(email);
     copied.value = true;
     setTimeout(() => (copied.value = false), 2000);
-  } catch {
-    // буфер обмена недоступен — остаётся ссылка mailto
-  }
+  } catch {}
 }
 
 const features = [

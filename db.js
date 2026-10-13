@@ -6,9 +6,6 @@ if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL не задан в .env");
 }
 
-// С DATABASE_CA (PEM-сертификат провайдера) сертификат сервера проверяется.
-// Без него в production соединение шифруется, но сертификат не проверяется:
-// так работает Postgres во внутренней сети Railway.
 const DATABASE_CA = process.env.DATABASE_CA?.replaceAll("\\n", "\n");
 
 if (process.env.NODE_ENV === "production" && !DATABASE_CA &&
@@ -85,16 +82,13 @@ export async function initDb() {
       PRIMARY KEY (chat_id, source_id)
     );
 
-    -- CRM: статус компании и заметка. Старые отметки становятся «написал».
     ALTER TABLE contacted
       ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'contacted'
         CHECK (status IN ('contacted', 'replied', 'client', 'rejected'));
     ALTER TABLE contacted ADD COLUMN IF NOT EXISTS note TEXT;
 
-    -- Описание специализации компании (из Geoapify, дописывается Ollama).
     ALTER TABLE leads ADD COLUMN IF NOT EXISTS description TEXT;
 
-    -- Заявки на доступ и одобренные пользователи (владелец здесь не хранится).
     CREATE TABLE IF NOT EXISTS access (
       user_id BIGINT PRIMARY KEY,
       username TEXT,
@@ -105,7 +99,6 @@ export async function initDb() {
       decided_at TIMESTAMPTZ
     );
 
-    -- Сколько поисков пользователь сделал за день (для лимита).
     CREATE TABLE IF NOT EXISTS search_usage (
       chat_id BIGINT NOT NULL,
       day DATE NOT NULL,
@@ -150,8 +143,6 @@ export async function updateSetting(chatId, field, value) {
   return result.rows[0];
 }
 
-// city/category у компании — где её нашли впервые, поэтому при повторной
-// встрече они не перезаписываются (данные конкретного поиска лежат в searches).
 export async function saveSearchWithLeads(chatId, city, category, leads) {
   const client = await pool.connect();
 
@@ -182,7 +173,6 @@ export async function saveSearchWithLeads(chatId, city, category, leads) {
          mobile = EXCLUDED.mobile,
          site = EXCLUDED.site,
          kind = EXCLUDED.kind,
-         -- Более длинное описание (уже дописанное Ollama) не затираем.
          description = CASE
            WHEN length(COALESCE(leads.description, '')) >
                 length(COALESCE(EXCLUDED.description, ''))
@@ -346,7 +336,6 @@ export async function getLastSearchLeads(chatId) {
   return { search, leads };
 }
 
-// Сутки считаем по времени Алматы.
 const TODAY = `(NOW() AT TIME ZONE 'Asia/Almaty')::date`;
 
 export async function takeSearchSlot(chatId, limit) {

@@ -33,13 +33,9 @@ const MAX_PLACES = Number(process.env.MAX_PLACES) || 1500;
 const MAX_PLACES_KZ = Number(process.env.MAX_PLACES_KZ) || 3000;
 const DEFAULT_CITY = process.env.DEFAULT_CITY || "Алматы";
 const PAGE_SIZE = 5;
-// Лимит поисков в сутки для одобренных пользователей (на владельца не действует).
 const DAILY_SEARCH_LIMIT = Number(process.env.DAILY_SEARCH_LIMIT) || 10;
-// Ollama дописывает описание компании до 20–50 слов. Без OLLAMA_URL
-// остаётся короткое описание из данных Geoapify.
 const OLLAMA_URL = process.env.OLLAMA_URL?.replace(/\/+$/, "");
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "qwen2.5:3b";
-// Ключ отправляем только по HTTPS, иначе его можно перехватить.
 const OLLAMA_API_KEY = OLLAMA_URL?.startsWith("https://")
   ? process.env.OLLAMA_API_KEY
   : undefined;
@@ -48,7 +44,6 @@ if (process.env.OLLAMA_API_KEY && !OLLAMA_API_KEY) {
   console.warn("OLLAMA_API_KEY не используется: OLLAMA_URL не https://");
 }
 
-// Статусы компании в CRM. Кнопка с номером переключает их по кругу.
 const STATUSES = {
   contacted: { icon: "✅", label: "написал" },
   replied: { icon: "💬", label: "ответил" },
@@ -116,8 +111,6 @@ const SOCIAL = [
 const sessions = new Map();
 const busy = new Set();
 
-// Открытые страницы храним только для последних чатов, чтобы память
-// не росла бесконечно. Вытесненный чат загрузит поиск из БД заново.
 const MAX_SESSIONS = 200;
 
 function rememberSession(chatId, session) {
@@ -141,7 +134,6 @@ function esc(value) {
 
 function isSocial(link) {
   try {
-    // В OSM ссылки часто без схемы: "instagram.com/cafe".
     const withScheme = /^[a-z][a-z\d+.-]*:\/\//i.test(link)
       ? link
       : `https://${link}`;
@@ -245,7 +237,6 @@ async function getJson(url) {
   return data;
 }
 
-// Названия категорий Geoapify. Берётся самая точная из известных.
 const CATEGORY_LABELS = {
   catering: "заведение общепита",
   "catering.restaurant": "ресторан",
@@ -263,7 +254,6 @@ const CATEGORY_LABELS = {
   "catering.taproom": "пивной бар",
   "service.beauty": "салон красоты",
   "service.beauty.hairdresser": "парикмахерская",
-  // Сюда Geoapify относит любой OSM shop=beauty, а не только спа.
   "service.beauty.spa": "салон красоты",
   "service.beauty.massage": "массажный салон",
   "service.vehicle": "автосервис",
@@ -371,7 +361,6 @@ const CATEGORY_LABELS = {
   leisure: "отдых",
 };
 
-// Кухни и типичные значения OSM-тегов.
 const TAG_LABELS = {
   pizza: "пицца",
   sushi: "суши",
@@ -490,7 +479,6 @@ function describePlace(properties) {
 
   const parts = [];
 
-  // Самая точная категория и, если отличается, более общая.
   const labels = [...new Set(known.map((c) => CATEGORY_LABELS[c]))];
   if (labels.length) {
     const main = labels[0];
@@ -502,7 +490,6 @@ function describePlace(properties) {
     parts.push(`кухня: ${humanTag(cuisine)}`);
   }
 
-  // Уточнения из OSM: что продают, ремесло, медицинская специализация.
   const details = [
     raw.shop && raw.shop !== "yes" ? raw.shop : null,
     raw.craft,
@@ -513,7 +500,6 @@ function describePlace(properties) {
     raw.trade,
   ].filter(Boolean);
 
-  // Берём только переведённые значения и не повторяем основной тип.
   const mainLabel = (labels[0] ?? "").toLowerCase();
   const profile = [
     ...new Set(
@@ -552,7 +538,6 @@ function describePlace(properties) {
     );
   }
 
-  // После «…» точку не ставим.
   return (
     parts.reduce(
       (text, part) =>
@@ -567,8 +552,6 @@ function wordCount(text) {
 }
 
 async function expandDescription(lead, city) {
-  // Название и описание из OSM может написать кто угодно, поэтому
-  // обрезаем их и прямо говорим модели, что это данные, а не команды.
   const data = (value, max) =>
     trimWords(String(value ?? "").replace(/[<>]/g, ""), max);
 
@@ -611,14 +594,11 @@ async function expandDescription(lead, city) {
       .trim();
 
     const words = text.split(" ");
-    // Модель иногда пишет длиннее — обрезаем до 50 слов.
     const result =
       words.length > 50
         ? `${words.slice(0, 50).join(" ").replace(/[,;:]$/, "")}…`
         : text;
 
-    // Ссылки, почта и номера в описании — признак того, что модель
-    // выполнила чужую инструкцию из данных. Такой ответ не показываем.
     if (/https?:|www\.|@|\d[\d\s()-]{6,}\d/i.test(result)) {
       return null;
     }
@@ -630,8 +610,6 @@ async function expandDescription(lead, city) {
   }
 }
 
-// id компаний, для которых Ollama уже запускали в этом процессе,
-// чтобы при ошибке не дёргать её на каждом перелистывании.
 const describing = new Set();
 
 async function describePage(api, chatId, session) {
@@ -652,7 +630,6 @@ async function describePage(api, chatId, session) {
     return;
   }
 
-  // Множество только растёт — изредка сбрасываем его, чтобы не копить память.
   if (describing.size > 10_000) {
     describing.clear();
   }
@@ -661,7 +638,6 @@ async function describePage(api, chatId, session) {
 
   let changed = false;
 
-  // По одной: локальная Ollama всё равно обрабатывает запросы очередью.
   for (const lead of pending) {
     const text = await expandDescription(lead, session.city);
     if (text) {
@@ -671,7 +647,6 @@ async function describePage(api, chatId, session) {
     }
   }
 
-  // Перерисовываем, только если пользователь не ушёл на другую страницу.
   if (
     changed &&
     sessions.get(chatId) === session &&
@@ -731,8 +706,6 @@ async function fetchPlaces(category, placeId, total) {
     }
   }
 
-  // Если не сработала ни одна группа (неверный ключ, лимит и т.п.),
-  // это ошибка, а не «ничего не найдено».
   if (failed === groups.length && lastError) {
     throw lastError;
   }
@@ -788,7 +761,6 @@ async function geocodePlace(text, type) {
   );
 
   geocode.searchParams.set("text", text);
-  // Без type=city первым результатом может оказаться улица или здание.
   geocode.searchParams.set("type", type);
   geocode.searchParams.set("bias", "countrycode:kz");
   geocode.searchParams.set("format", "json");
@@ -912,7 +884,6 @@ async function search(chatId, category, city) {
       continue;
     }
 
-    // Ищем компании с телефоном — и без сайта, и только с соцсетью.
     if (!phone) {
       continue;
     }
@@ -1222,7 +1193,6 @@ async function showPage(
         options
       );
 
-    // Запоминаем сообщение, чтобы /clear мог его перерисовать.
     session.messageId =
       message.message_id;
   } else {
@@ -1241,7 +1211,6 @@ async function showPage(
     }
   }
 
-  // Описания от Ollama дописываются в фоне, страница не ждёт.
   describePage(ctx.api, ctx.chat.id, session).catch((error) =>
     console.warn("Не удалось дописать описания:", error.message)
   );
@@ -1295,8 +1264,6 @@ async function redrawPage(
       pageOptions(keyboard)
     );
   } catch (error) {
-    // Сообщение могло быть удалено или слишком старое —
-    // это не повод ронять команду.
     console.warn(
       "Не удалось перерисовать страницу:",
       error.message ?? error
@@ -1418,8 +1385,6 @@ const REQUEST_KEYBOARD = new InlineKeyboard().text(
   "access:request"
 );
 
-// Не больше 20 уведомлений о заявках в час: иначе ботоферма завалит
-// владельца сообщениями. Остальные заявки всё равно сохраняются в /users.
 const NOTIFY_LIMIT = 20;
 let notifyTimes = [];
 
@@ -1529,7 +1494,6 @@ bot.callbackQuery("access:request", async (ctx) => {
 
 
 bot.callbackQuery(/^access:(ok|no):(\d+)$/, async (ctx) => {
-  // Одобренные пользователи проходят общую проверку, поэтому проверяем владельца здесь.
   if (!isOwner(ctx)) {
     return ctx.answerCallbackQuery({ text: "Нет доступа.", show_alert: true });
   }
@@ -1552,7 +1516,6 @@ bot.callbackQuery(/^access:(ok|no):(\d+)$/, async (ctx) => {
     ignoreNotModified(error);
   }
 
-  // Пользователь мог заблокировать бота — это не ошибка для владельца.
   await ctx.api
     .sendMessage(
       userId,
@@ -1718,8 +1681,6 @@ async function handleSearch(
       city
     );
 
-    // Пустой поиск не сохраняем, иначе он «затирает»
-    // предыдущий результат для /last, /stats и /export.
     if (leads.length === 0) {
       return ctx.reply(
         `Проверено: ${total}. Подходящих новых компаний нет.` +
@@ -1780,7 +1741,6 @@ async function handleSearch(
   } catch (error) {
     console.error(error);
 
-    // Подробности (тексты Postgres, Geoapify) видит только владелец.
     await ctx.reply(
       error instanceof UserError || isOwner(ctx)
         ? `Ошибка: ${error.message}`
@@ -1817,13 +1777,6 @@ bot.command("business", (ctx) => {
 });
 
 
-/*
- * grammY обрабатывает обновления по одному.
- * Если ждать поиск прямо в обработчике, бот «замирает»
- * на всё время поиска (кнопки не отвечают).
- * Поэтому поиск запускаем в фоне, а от повторного
- * запуска защищает busy.
- */
 function startSearch(
   ctx,
   categoryName,
@@ -1944,8 +1897,6 @@ bot.callbackQuery(
 
     const status = nextStatus(lead.status);
 
-    // Сначала пишем в БД, и только при успехе меняем память —
-    // иначе отметка в памяти разойдётся с базой.
     try {
       await setLeadStatus(
         chatId,
@@ -1966,7 +1917,6 @@ bot.callbackQuery(
 
     lead.status = status;
 
-    // Снятие отметки удаляет и заметку.
     if (!status) {
       lead.note = null;
     }
@@ -2059,8 +2009,6 @@ bot.command(
         '""'
       )}"`;
 
-    // Данные из OSM может править кто угодно. Значение вида «=HYPERLINK(...)»
-    // Excel выполнил бы как формулу, поэтому такие строки начинаем с «'».
     const safe = (value) => {
       const text = String(value ?? "");
       return /^[=+\-@\t\r]/.test(text) ? `'${text}` : text;
@@ -2081,7 +2029,6 @@ bot.command(
     ];
 
     for (const lead of session.leads) {
-      // Телефон («+7…») и ссылку WhatsApp собирает сам бот, их не трогаем.
       rows.push([
         safe(lead.name),
         safe(lead.description),
@@ -2386,8 +2333,6 @@ async function shutdown(
     `${signal}: завершаю работу...`
   );
 
-  // bot.stop() подтверждает offset последнего обновления,
-  // иначе после перезапуска оно может обработаться повторно.
   try {
     await bot.stop();
   } catch (error) {
@@ -2430,7 +2375,6 @@ const COMMANDS = [
 
 await bot.api.setMyCommands(COMMANDS);
 
-// Владельцу в меню видны и админские команды.
 await bot.api
   .setMyCommands(
     [

@@ -1,4 +1,3 @@
-// Нужны переменные API_TOKEN и OWNER_ID в настройках проекта Vercel.
 
 function esc(value) {
   return String(value ?? "")
@@ -7,9 +6,6 @@ function esc(value) {
     .replaceAll(">", "&gt;");
 }
 
-// Ограничение частоты заявок. Хранится в памяти экземпляра функции:
-// на Vercel экземпляров может быть несколько и они перезапускаются,
-// поэтому это защита от простого спама, а не жёсткий лимит.
 const WINDOW_MS = 10 * 60 * 1000;
 const PER_IP = 3;
 const TOTAL = 30;
@@ -30,7 +26,6 @@ function tooMany(ip) {
   recent.push(now);
   hits.set(ip, own);
 
-  // Чистим старые IP, чтобы Map не росла.
   if (hits.size > 1000) {
     for (const [key, times] of hits) {
       if (!times.some((time) => now - time < WINDOW_MS)) hits.delete(key);
@@ -75,7 +70,6 @@ export default async function handler(req, res) {
 
   const { telegram = "", niche = "", website = "" } = req.body ?? {};
 
-  // Скрытое поле: его заполняют только боты.
   if (website) {
     return res.status(200).json({ ok: true });
   }

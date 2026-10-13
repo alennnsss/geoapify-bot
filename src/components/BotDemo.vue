@@ -8,7 +8,6 @@ const PAGE_SIZE = 3;
 const ICONS = { contacted: "✅", replied: "💬", client: "🤝", rejected: "❌" };
 const CYCLE = [null, "contacted", "replied", "client", "rejected"];
 
-// Названия и адреса — в i18n (demo.leads), здесь только ключи.
 const leads = ref([
   { key: "l1", phone: "+7 700 000 00 01", mobile: true, status: "contacted" },
   { key: "l2", phone: "+7 700 000 00 02", mobile: true, status: null },

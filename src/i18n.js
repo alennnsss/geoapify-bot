@@ -370,16 +370,13 @@ function savedLocale() {
   try {
     const saved = localStorage.getItem("locale");
     if (saved in messages) return saved;
-  } catch {
-    // localStorage недоступен
-  }
+  } catch {}
   const lang = navigator.language ?? "";
   if (lang.startsWith("ru")) return "ru";
   if (lang.startsWith("zh")) return "zh";
   return "en";
 }
 
-// Языки в выпадающем списке шапки.
 export const LOCALES = [
   { code: "ru", label: "Русский", short: "RU" },
   { code: "en", label: "English", short: "EN" },
@@ -403,9 +400,7 @@ export function setLocale(locale) {
   applyLocale(locale);
   try {
     localStorage.setItem("locale", locale);
-  } catch {
-    // localStorage недоступен
-  }
+  } catch {}
 }
 
 applyLocale(i18n.global.locale.value);
