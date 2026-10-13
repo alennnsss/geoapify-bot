@@ -33,7 +33,7 @@ const MAX_PLACES = Number(process.env.MAX_PLACES) || 1500;
 const MAX_PLACES_KZ = Number(process.env.MAX_PLACES_KZ) || 3000;
 const DEFAULT_CITY = process.env.DEFAULT_CITY || "Алматы";
 const PAGE_SIZE = 5;
-const DAILY_SEARCH_LIMIT = Number(process.env.DAILY_SEARCH_LIMIT) || 10;
+const DAILY_SEARCH_LIMIT = Number(process.env.DAILY_SEARCH_LIMIT) || 20;
 const OLLAMA_URL = process.env.OLLAMA_URL?.replace(/\/+$/, "");
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "qwen2.5:3b";
 const OLLAMA_API_KEY = OLLAMA_URL?.startsWith("https://")
@@ -209,6 +209,14 @@ function buildCheckUrl(name, city) {
   const query = `"${name}" ${city} официальный сайт`;
 
   return `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+}
+
+function buildMapUrl(lead, city) {
+  const query = [lead.name, lead.address || city].join(", ");
+
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+    query
+  )}`;
 }
 
 async function getJson(url) {
@@ -1010,13 +1018,9 @@ function leadText(
     lines.push(esc(lead.address));
   }
 
-  if (lead.phone) {
+  if (lead.phone && !lead.mobile) {
     lines.push(
-      `📞 ${esc(lead.phone)}${
-        lead.mobile
-          ? ""
-          : " (городской, только звонок)"
-      }`
+      `📞 ${esc(lead.phone)} (городской, только звонок)`
     );
   }
 
@@ -1054,6 +1058,12 @@ function leadText(
     `<a href="${esc(
       checkUrl
     )}">🌐 проверить сайт</a>`
+  );
+
+  links.push(
+    `<a href="${esc(
+      buildMapUrl(lead, city)
+    )}">📷 фото</a>`
   );
 
   lines.push(
