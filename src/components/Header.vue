@@ -18,7 +18,6 @@ function chooseLocale(code) {
   langButton.value?.focus();
 }
 
-// Закрываем список по клику мимо и по Escape.
 function onDocumentClick(event) {
   if (!langRoot.value?.contains(event.target)) langOpen.value = false;
 }

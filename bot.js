@@ -129,7 +129,6 @@ function rememberSession(chatId, session) {
   }
 }
 
-// Ошибка, текст которой можно показать пользователю.
 class UserError extends Error {}
 
 function esc(value) {
@@ -160,7 +159,6 @@ function isSocial(link) {
   }
 }
 
-// Казахстан (+7 70x/747/77x) и Россия (+7 9xx).
 function isMobile(phone) {
   return /^\+7(70[0-8]|747|77[1-8]|9\d\d)/.test(phone);
 }
@@ -482,8 +480,6 @@ function trimWords(text, max) {
   return `${value.slice(0, max).replace(/\s+\S*$/, "")}…`;
 }
 
-// Короткое описание специализации из данных Geoapify/OSM.
-// Ничего не придумывает: только то, что есть в карточке места.
 function describePlace(properties) {
   const raw = properties.datasource?.raw ?? {};
   const categories = properties.categories ?? [];
@@ -570,7 +566,6 @@ function wordCount(text) {
   return String(text ?? "").split(/\s+/).filter(Boolean).length;
 }
 
-// Ollama дописывает описание до 20–50 слов. Возвращает null при ошибке.
 async function expandDescription(lead, city) {
   // Название и описание из OSM может написать кто угодно, поэтому
   // обрезаем их и прямо говорим модели, что это данные, а не команды.
@@ -639,7 +634,6 @@ async function expandDescription(lead, city) {
 // чтобы при ошибке не дёргать её на каждом перелистывании.
 const describing = new Set();
 
-// Дописывает описания для открытой страницы в фоне и перерисовывает её.
 async function describePage(api, chatId, session) {
   if (!OLLAMA_URL) {
     return;
@@ -977,8 +971,6 @@ async function search(chatId, category, city) {
   };
 }
 
-// Категорию сравниваем в нижнем регистре,
-// а город оставляем как ввёл пользователь.
 function parseQuery(text = "") {
   const original = text.trim();
   const normalized = original.toLowerCase();
@@ -1027,8 +1019,6 @@ function parseQuery(text = "") {
 }
 
 
-// Текст одной компании. Ссылка «проверить сайт» строится заново,
-// потому что в БД она не хранится.
 function leadText(
   lead,
   number,
@@ -1315,12 +1305,6 @@ async function redrawPage(
 }
 
 
-/*
- * Сессия для кнопки.
- * В callback_data лежит searchId, поэтому кнопка
- * из старого сообщения работает со своим поиском,
- * а не с тем, что сейчас в памяти.
- */
 async function getSessionFor(
   chatId,
   searchId
@@ -1461,12 +1445,6 @@ async function notifyOwner(api, row) {
   }
 }
 
-/*
- * Доступ: владелец и одобренные пользователи.
- * Новый человек при первом сообщении сразу попадает в заявки, владельцу
- * приходят кнопки. После отказа — повторная заявка кнопкой.
- * Пользователи работают только в личке: их данные привязаны к chat_id.
- */
 bot.use(async (ctx, next) => {
   if (isOwner(ctx)) {
     return next();
@@ -2010,10 +1988,6 @@ bot.callbackQuery(
 );
 
 
-/*
- * Кнопки старого формата (без searchId) и прочие
- * неизвестные нажатия — отвечаем, чтобы кнопка не «крутилась».
- */
 bot.on(
   "callback_query:data",
   (ctx) =>
@@ -2027,9 +2001,6 @@ bot.on(
 );
 
 
-/*
- * Текущий поиск: из памяти, а после перезапуска — последний из БД.
- */
 async function currentSession(chatId) {
   const current = sessions.get(chatId);
 

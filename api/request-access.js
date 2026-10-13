@@ -1,4 +1,3 @@
-// Vercel-функция: заявка с сайта уходит владельцу в Telegram.
 // Нужны переменные API_TOKEN и OWNER_ID в настройках проекта Vercel.
 
 function esc(value) {
@@ -41,7 +40,6 @@ function tooMany(ip) {
   return false;
 }
 
-// Заявки принимаем только со своего сайта.
 function sameOrigin(req) {
   const origin = req.headers.origin;
   if (!origin) return false;

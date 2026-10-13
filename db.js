@@ -150,8 +150,6 @@ export async function updateSetting(chatId, field, value) {
   return result.rows[0];
 }
 
-// Сохраняет поиск и все его компании одной транзакцией:
-// при ошибке не остаётся «полусохранённого» поиска.
 // city/category у компании — где её нашли впервые, поэтому при повторной
 // встрече они не перезаписываются (данные конкретного поиска лежат в searches).
 export async function saveSearchWithLeads(chatId, city, category, leads) {
@@ -225,7 +223,6 @@ export async function saveSearchWithLeads(chatId, city, category, leads) {
   }
 }
 
-// status = null снимает отметку целиком (вместе с заметкой).
 export async function setLeadStatus(chatId, sourceId, status) {
   if (status) {
     await pool.query(
@@ -242,8 +239,6 @@ export async function setLeadStatus(chatId, sourceId, status) {
   }
 }
 
-// Заметка без отметки невозможна: если компании ещё нет в contacted,
-// она получает статус «написал».
 export async function setLeadNote(chatId, sourceId, note) {
   const result = await pool.query(
     `INSERT INTO contacted (chat_id, source_id, note)
@@ -280,7 +275,6 @@ export async function getStatusCounts(chatId) {
   return Object.fromEntries(result.rows.map((row) => [row.status, row.count]));
 }
 
-// Компании в работе: ответили или уже клиенты, свежие сверху.
 export async function getPipeline(chatId, limit = 30) {
   const result = await pool.query(
     `SELECT l.name, l.phone, l.mobile, c.status, c.note
@@ -355,7 +349,6 @@ export async function getLastSearchLeads(chatId) {
 // Сутки считаем по времени Алматы.
 const TODAY = `(NOW() AT TIME ZONE 'Asia/Almaty')::date`;
 
-// Атомарно засчитывает поиск. Возвращает false, если лимит на сегодня исчерпан.
 export async function takeSearchSlot(chatId, limit) {
   const result = await pool.query(
     `INSERT INTO search_usage (chat_id, day, count)
@@ -384,9 +377,6 @@ export async function getAccess(userId) {
   return result.rows[0] ?? null;
 }
 
-// Новая заявка или повторная — не раньше чем через сутки после отказа.
-// Одобренного не трогаем.
-// Возвращает строку, если заявка действительно создана (её надо показать владельцу).
 export async function requestAccess(userId, username, firstName) {
   const result = await pool.query(
     `INSERT INTO access (user_id, username, first_name)
