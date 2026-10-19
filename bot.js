@@ -236,6 +236,19 @@ function buildWa(lead, template) {
   )}`;
 }
 
+// Для сообщений: кириллица остаётся буквами, а не %D0%9F...
+// Иначе длинный шаблон раздувает ссылку в 6 раз и Telegram
+// отвечает ENTITIES_TOO_LONG.
+function compactUrl(url) {
+  return url.replace(/(%[89A-F][0-9A-F])+/gi, (bytes) => {
+    try {
+      return decodeURIComponent(bytes);
+    } catch {
+      return bytes;
+    }
+  });
+}
+
 function buildCheckUrl(name, city) {
   const query = `"${name}" ${city} официальный сайт`;
 
@@ -1080,10 +1093,13 @@ function leadText(
 
   const links = [];
 
-  const wa = buildWa(
-    lead,
-    template
-  );
+  // template === null — запасной вид страницы: ссылка без текста
+  const wa =
+    template === null
+      ? lead.mobile && lead.phone
+        ? `https://wa.me/${lead.phone.slice(1)}`
+        : null
+      : buildWa(lead, template) && compactUrl(buildWa(lead, template));
 
   if (wa) {
     links.push(
@@ -1118,7 +1134,7 @@ function leadText(
 }
 
 
-function renderPage(chatId, session) {
+function renderPage(chatId, session, shortWa = false) {
   const settingsPromise =
     getSettings(
       chatId,
@@ -1166,7 +1182,7 @@ function renderPage(chatId, session) {
               leadText(
                 lead,
                 start + index + 1,
-                settings.template,
+                shortWa ? null : settings.template,
                 session.city
               )
           )
@@ -1224,28 +1240,43 @@ function renderPage(chatId, session) {
 }
 
 
+function isTooLong(error) {
+  return String(error).includes("ENTITIES_TOO_LONG");
+}
+
+// Рисует страницу и отправляет её через send(text, options).
+// Если ссылки не влезли в лимит Telegram — повторяет без текста шаблона.
+async function sendPage(chatId, session, send) {
+  for (const shortWa of [false, true]) {
+    const { text, keyboard } = await renderPage(
+      chatId,
+      session,
+      shortWa
+    );
+
+    try {
+      return await send(text, pageOptions(keyboard));
+    } catch (error) {
+      if (shortWa || !isTooLong(error)) {
+        throw error;
+      }
+
+      console.warn("Страница не влезла, шлю WhatsApp без текста");
+    }
+  }
+}
+
 async function showPage(
   ctx,
   session,
   edit = false
 ) {
-  const {
-    text,
-    keyboard,
-  } = await renderPage(
-    ctx.chat.id,
-    session
-  );
-
-  const options =
-    pageOptions(keyboard);
-
   if (!edit) {
-    const message =
-      await ctx.reply(
-        text,
-        options
-      );
+    const message = await sendPage(
+      ctx.chat.id,
+      session,
+      (text, options) => ctx.reply(text, options)
+    );
 
     session.messageId =
       message.message_id;
@@ -1256,9 +1287,10 @@ async function showPage(
       session.messageId;
 
     try {
-      await ctx.editMessageText(
-        text,
-        options
+      await sendPage(
+        ctx.chat.id,
+        session,
+        (text, options) => ctx.editMessageText(text, options)
       );
     } catch (error) {
       ignoreNotModified(error);
@@ -1302,20 +1334,14 @@ async function redrawPage(
     return;
   }
 
-  const {
-    text,
-    keyboard,
-  } = await renderPage(
-    chatId,
-    session
-  );
-
   try {
-    await api.editMessageText(
-      chatId,
-      session.messageId,
-      text,
-      pageOptions(keyboard)
+    await sendPage(chatId, session, (text, options) =>
+      api.editMessageText(
+        chatId,
+        session.messageId,
+        text,
+        options
+      )
     );
   } catch (error) {
     console.warn(
