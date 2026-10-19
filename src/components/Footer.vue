@@ -18,6 +18,7 @@ const year = new Date().getFullYear();
           <ul>
             <li><RouterLink :to="{ path: '/', hash: '#how' }">{{ t("nav.how") }}</RouterLink></li>
             <li><RouterLink :to="{ path: '/', hash: '#commands' }">{{ t("nav.commands") }}</RouterLink></li>
+            <li><RouterLink :to="{ path: '/', hash: '#categories' }">{{ t("nav.categories") }}</RouterLink></li>
             <li><RouterLink :to="{ path: '/', hash: '#faq' }">{{ t("nav.faq") }}</RouterLink></li>
           </ul>
         </div>

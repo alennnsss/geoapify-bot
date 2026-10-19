@@ -47,6 +47,7 @@ onBeforeUnmount(() => {
       <nav class="nav-pill" :aria-label="t('nav.label')">
         <RouterLink :to="{ path: '/', hash: '#how' }">{{ t("nav.how") }}</RouterLink>
         <RouterLink :to="{ path: '/', hash: '#commands' }">{{ t("nav.commands") }}</RouterLink>
+        <RouterLink :to="{ path: '/', hash: '#categories' }">{{ t("nav.categories") }}</RouterLink>
         <RouterLink :to="{ path: '/', hash: '#faq' }">{{ t("nav.faq") }}</RouterLink>
         <RouterLink :to="{ path: '/', hash: '#access' }">{{ t("nav.access") }}</RouterLink>
         <RouterLink to="/about">{{ t("nav.about") }}</RouterLink>

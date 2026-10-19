@@ -40,6 +40,38 @@ const stats = [
   ["10", "limit"],
   ["4", "statuses"],
 ];
+const categories = [
+  ["кафе", "cafe"],
+  ["ресторан", "restaurant"],
+  ["бар", "bar"],
+  ["фастфуд", "fastfood"],
+  ["кулинария", "deli", true],
+  ["цветы", "flowers", true],
+  ["парикмахерская", "hairdresser"],
+  ["барбершоп", "barber", true],
+  ["салон красоты", "beauty"],
+  ["фитнес", "fitness"],
+  ["автосервис", "carservice"],
+  ["аренда авто", "carrental", true],
+  ["магазин", "shop"],
+  ["женская одежда", "womenwear", true],
+  ["детская одежда", "kidswear", true],
+  ["детские игрушки", "toys", true],
+  ["веломагазин", "bike", true],
+  ["кэмпинг", "camping", true],
+  ["аптека", "pharmacy"],
+  ["отель", "hotel"],
+  ["офис", "office"],
+  ["образование", "education"],
+  ["учебный центр", "center", true],
+  ["языковые курсы", "languages", true],
+  ["английский", "english", true],
+  ["испанский", "spanish", true],
+  ["корейский", "korean", true],
+  ["японский", "japanese", true],
+  ["развивашки", "kidsclub", true],
+  ["детский сад", "kindergarten", true],
+];
 const faq = ["source", "cities", "limit", "privacy", "access"];
 
 const commands = [
@@ -159,6 +191,21 @@ const commands = [
         <li v-for="[cmd, key] in commands" :key="cmd" class="cmd">
           <code>{{ cmd }}</code>
           <span>{{ t(`commands.${key}`) }}</span>
+        </li>
+      </ul>
+    </section>
+
+    <section id="categories" class="section">
+      <div class="section-head">
+        <h2>{{ t("categories.title") }}</h2>
+        <span>{{ t("categories.count", { n: categories.length }) }}</span>
+      </div>
+      <p class="panel-note">{{ t("categories.hint") }}</p>
+      <ul class="cat-grid" role="list">
+        <li v-for="[cat, key, isNew] in categories" :key="key" class="cat">
+          <code>{{ cat }}</code>
+          <span>{{ t(`categories.${key}`) }}</span>
+          <em v-if="isNew" class="cat-new">{{ t("categories.new") }}</em>
         </li>
       </ul>
     </section>
