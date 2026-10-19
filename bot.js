@@ -89,10 +89,41 @@ const CATEGORIES = {
   магазин: "commercial",
   офис: "office",
   образование: "education",
+  цветы: "commercial.florist",
+  "аренда авто": "rental.car",
+  "женская одежда": "commercial.clothing.women",
+  барбершоп: "service.beauty.hairdresser",
+  "детские игрушки": "commercial.toy_and_game",
+  "детская одежда": "commercial.clothing.kids,commercial.baby_goods",
+  кулинария: "commercial.food_and_drink.deli,commercial.food_and_drink.bakery",
+  веломагазин: "commercial.outdoor_and_sport.bicycle",
+  кэмпинг: "commercial.outdoor_and_sport",
+  "языковые курсы": "education.language_school",
+  английский: "education.language_school,office.educational_institution",
+  испанский: "education.language_school,office.educational_institution",
+  корейский: "education.language_school,office.educational_institution",
+  японский: "education.language_school,office.educational_institution",
+  "учебный центр": "office.educational_institution,education.language_school",
+  развивашки: "childcare",
+  "детский сад": "childcare.kindergarten",
   бизнес:
     "catering,service.beauty,service.vehicle,sport,accommodation,healthcare",
   все:
     "catering,commercial,service,office,healthcare,education,accommodation,sport,entertainment,leisure,tourism,pet,childcare,rental,production",
+};
+
+// Фильтр по названию для категорий, которых нет в Geoapify отдельно:
+// include — название должно совпасть, exclude — компания отбрасывается.
+const NAME_FILTERS = {
+  барбершоп: { include: /барбер|barber/i },
+  кулинария: { exclude: /самс|samsa/i },
+  английский: { include: /англ|english/i },
+  испанский: { include: /испан|spanish|españ|espan/i },
+  корейский: { include: /корей|korea|hangu?k|한국/i },
+  японский: { include: /япон|japan|nihon|日本/i },
+  развивашки: { exclude: /сад|ясли|kindergarten/i },
+  // государственные сады обычно с номером или КГКП/ГККП в названии
+  "детский сад": { exclude: /№|кгкп|гккп|государствен/i },
 };
 
 const SOCIAL = [
@@ -292,7 +323,10 @@ const CATEGORY_LABELS = {
   "commercial.food_and_drink.fruit_and_vegetable": "овощи и фрукты",
   "commercial.clothing": "магазин одежды",
   "commercial.clothing.shoes": "обувной магазин",
-  "commercial.clothing.children": "детская одежда",
+  "commercial.clothing.kids": "детская одежда",
+  "commercial.clothing.women": "женская одежда",
+  "commercial.baby_goods": "детские товары",
+  "commercial.food_and_drink.deli": "кулинария",
   "commercial.health_and_beauty": "магазин косметики",
   "commercial.health_and_beauty.cosmetics": "магазин косметики",
   "commercial.health_and_beauty.optician": "оптика",
@@ -313,7 +347,8 @@ const CATEGORY_LABELS = {
   "commercial.books": "книжный магазин",
   "commercial.stationery": "канцтовары",
   "commercial.pet": "зоомагазин",
-  "commercial.sports": "спорттовары",
+  "commercial.outdoor_and_sport": "спорт и туризм",
+  "commercial.outdoor_and_sport.bicycle": "веломагазин",
   "commercial.vehicle": "автосалон",
   "commercial.second_hand": "секонд-хенд",
   "commercial.chemist": "бытовая химия",
@@ -814,7 +849,7 @@ async function resolvePlaces(city) {
   return ids;
 }
 
-async function search(chatId, category, city) {
+async function search(chatId, category, city, nameFilter) {
   const placeIds = await resolvePlaces(city);
 
   const limit = isWholeCountry(city)
@@ -870,6 +905,15 @@ async function search(chatId, category, city) {
     }
 
     seen.add(sourceId);
+
+    const name = String(properties.name);
+
+    if (
+      (nameFilter?.include && !nameFilter.include.test(name)) ||
+      nameFilter?.exclude?.test(name)
+    ) {
+      continue;
+    }
 
     const phone = cleanPhone([
       properties.contact?.phone,
@@ -1688,7 +1732,8 @@ async function handleSearch(
     } = await search(
       chatId,
       category,
-      city
+      city,
+      NAME_FILTERS[categoryName]
     );
 
     if (leads.length === 0) {
